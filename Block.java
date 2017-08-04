@@ -5,7 +5,7 @@ import javax.swing.JLabel;
 public class Block {
 
     private JLabel label = new JLabel();
-    private int state; //0:壁 1:空白 2:ブロック 3:動いているブロック
+    private int state; //0:壁 1:空白 2:止まったブロック 3:動いているブロック
 
     public Block() {}
 

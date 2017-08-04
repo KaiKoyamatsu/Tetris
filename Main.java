@@ -16,11 +16,9 @@ public class Main extends JFrame {
                 field.keyAction(e.getKeyCode());
             }
 
-            public void keyTyped(KeyEvent e) {
-            }
+            public void keyTyped(KeyEvent e) {}
 
-            public void keyReleased(KeyEvent e) {
-            }
+            public void keyReleased(KeyEvent e) {}
         });
         field.setVisible(true);
 
@@ -29,6 +27,7 @@ public class Main extends JFrame {
                 field.act();
             }
         };
+        
         Timer timer = new Timer();
         timer.schedule(task, 0L, 1000L);
     }

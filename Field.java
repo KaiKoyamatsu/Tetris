@@ -41,7 +41,7 @@ public class Field extends JFrame {
 
     Field() {
         setTitle("Tetris");
-        setBounds(10, 10, window_height, window_width);     //ウィンドウサイズの指定
+        setBounds(10, 10, window_height, window_width); //ウィンドウサイズの指定
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //画面を閉じたときの処理
         p.setLayout(new GridLayout(height + 1, width + 2));
         initField();
@@ -150,14 +150,7 @@ public class Field extends JFrame {
                 }
                 break;
             case KeyEvent.VK_UP:
-                /*
-                if (isGround()) {
-                    for (int i = 0; i < blockNum; i++) {
-                        moveDown(mx[i], my[i]);
-                        my[i]++;
-                    }
-                }
-                 */
+                /*ここに回転の当たり判定と動作のメソッドを書く */
                 break;
         }
     }
@@ -218,6 +211,8 @@ public class Field extends JFrame {
         }
     }
 
+    //回転動作のメソッド
+    /*制作中*/
     public void turnBlock() {
         int[][] turnPlace = new int[5][5];
 

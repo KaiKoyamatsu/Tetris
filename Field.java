@@ -21,17 +21,18 @@ public class Field extends JFrame {
     static final int block = 2;
     static final int mBlock = 3;
 
-    //フィールドのサイズ決め
-    static final int height = 30;
+    //縦，横のブロック数
+    static final int height = 20;
     static final int width = 10;
-    //+1は地面,+2は壁
+    
+    //ウィンドウサイズ
     static final int window_height = 500;
     static final int window_width = 700;
 
     //Blockの座標をキーとしてインスタンスを格納
     HashMap<String, Block> map = new HashMap<>();
 
-    //Blockを落とす開始位置
+    //ブロック数
     static final int blockNum = 4;//ブロック数
     private int[] mx = new int[blockNum];//x座標
     private int[] my = new int[blockNum];//y座標
@@ -61,10 +62,8 @@ public class Field extends JFrame {
     }
 
     public void initBlock() {
-        int r = new Random().nextInt(2);
-//        r = 0;
+        int r = new Random().nextInt(7);
         switch (r) {
-            //0が中心
             case 0:
                 mx[0] = (width + 2) / 2;
                 mx[1] = (width + 2) / 2;
@@ -85,6 +84,56 @@ public class Field extends JFrame {
                 my[2] = -1;
                 my[3] = -1;
                 break;
+            case 2:
+                mx[0] = (width + 2) / 2;
+                mx[1] = (width + 2) / 2;
+                mx[2] = ((width + 2) / 2) + 1;
+                mx[3] = ((width + 2) / 2) + 2;
+                my[0] = 0;
+                my[1] = -1;
+                my[2] = -1;
+                my[3] = -1;
+                break;
+            case 3:
+                mx[0] = (width + 2) / 2;
+                mx[1] = ((width + 2) / 2) + 1;
+                mx[2] = ((width + 2) / 2);
+                mx[3] = ((width + 2) / 2) - 1;
+                my[0] = 0;
+                my[1] = 0;
+                my[2] = -1;
+                my[3] = -1;
+                break;
+            case 4:
+                mx[0] = (width + 2) / 2;
+                mx[1] = ((width + 2) / 2) - 1;
+                mx[2] = ((width + 2) / 2);
+                mx[3] = ((width + 2) / 2) + 1;
+                my[0] = 0;
+                my[1] = 0;
+                my[2] = -1;
+                my[3] = -1;
+                break;
+            case 5:
+                mx[0] = (width + 2) / 2;
+                mx[1] = ((width + 2) / 2) - 1;
+                mx[2] = (width + 2) / 2;
+                mx[3] = ((width + 2) / 2) + 1;
+                my[0] = 0;
+                my[1] = -1;
+                my[2] = -1;
+                my[3] = -1;
+                break;
+            case 6:
+                mx[0] = (width + 2) / 2;
+                mx[1] = ((width + 2) / 2) + 1;
+                mx[2] = (width + 2) / 2;
+                mx[3] = ((width + 2) / 2) + 1;
+                my[0] = 0;
+                my[1] = 0;
+                my[2] = -1;
+                my[3] = -1;
+                break;
         }
     }
 
@@ -101,24 +150,15 @@ public class Field extends JFrame {
         b.getLabel().setOpaque(true);
         p.add(b.getLabel());
 
-        b.setState(state);
-
         getContentPane().add(p, BorderLayout.CENTER);
         Container contentPane = getContentPane();
         contentPane.add(p);//パネルの更新
     }
 
     public void act() {
+        //地面についてなければ，ブロックを落とす
         if (isGround()) {
-            for (int i = 0; i < blockNum; i++) {
-                downBlock(mx[i], my[i]);
-                my[i]++;
-            }
-        }
-        for (int i = height; i >= 0; i--) {
-            if (isCheckLine(i)) {
-                deleteLine(i);
-            }
+            moveDown();
         }
     }
 
@@ -127,99 +167,171 @@ public class Field extends JFrame {
         switch (key) {
             case KeyEvent.VK_RIGHT:
                 if (isWall(moveRight)) {
-                    for (int i = 0; i < blockNum; i++) {
-                        moveRight(mx[i], my[i]);
-                        mx[i]++;
-                    }
+                    moveRight();
                 }
                 break;
             case KeyEvent.VK_LEFT:
                 if (isWall(moveLeft)) {
-                    for (int i = 0; i < blockNum; i++) {
-                        moveLeft(mx[i], my[i]);
-                        mx[i]--;
-                    }
+                    moveLeft();
                 }
                 break;
             case KeyEvent.VK_DOWN:
                 if (isGround()) {
-                    for (int i = 0; i < blockNum; i++) {
-                        moveDown(mx[i], my[i]);
-                        my[i]++;
-                    }
+                    moveDown();
                 }
                 break;
             case KeyEvent.VK_UP:
-                /*ここに回転の当たり判定と動作のメソッドを書く */
+                if (isChangePoint()) {
+                    turnBlock();
+                }
                 break;
         }
     }
 
-    //Blockを1つ下へ移動
-    public void downBlock(int mx, int my) {
-        if (my == 0) {
-            Block b = map.get(mx + "," + my);
-            b.getLabel().setBackground(Color.GREEN);
-            b.setState(mBlock);
-        } else if (my > 0) {
-            Block before = map.get((mx) + "," + (my - 1));
-            before.getLabel().setBackground(Color.GRAY);
-            before.setState(space);
+    //ブロックを消す
+    public void clear(int mx, int my) {
+        if (my > 0) {
+            Block b = map.get(mx + "," + (my - 1));
+            b.getLabel().setBackground(Color.GRAY);
+            b.setState(space);
+        }
+    }
 
-            Block b = map.get(mx + "," + my);
+    //ブロックを置く
+    public void place(int mx, int my) {
+        if (my > 0) {
+            Block b = map.get(mx + "," + (my - 1));
             b.getLabel().setBackground(Color.GREEN);
             b.setState(mBlock);
         }
     }
 
     //右に移動
-    public void moveRight(int mx, int my) {
-        if (my > 0) {
-            Block before = map.get(mx + "," + (my - 1));
-            before.getLabel().setBackground(Color.GRAY);
-            before.setState(space);
+    public void moveRight() {
+        for (int i = 0; i < blockNum; i++) {
+            clear(mx[i], my[i]);
+            mx[i]++;
+        }
 
-            Block b = map.get((mx + 1) + "," + (my - 1));
-            b.getLabel().setBackground(Color.GREEN);
-            b.setState(mBlock);
+        for (int i = 0; i < blockNum; i++) {
+            place(mx[i], my[i]);
         }
     }
 
     //左に移動
-    public void moveLeft(int mx, int my) {
-        if (my > 0) {
-            Block before = map.get(mx + "," + (my - 1));
-            before.getLabel().setBackground(Color.GRAY);
-            before.setState(space);
+    public void moveLeft() {
+        for (int i = 0; i < blockNum; i++) {
+            clear(mx[i], my[i]);
+            mx[i]--;
+        }
 
-            Block b = map.get((mx - 1) + "," + (my - 1));
-            b.getLabel().setBackground(Color.GREEN);
-            b.setState(mBlock);
+        for (int i = 0; i < blockNum; i++) {
+            place(mx[i], my[i]);
         }
     }
 
     //下に移動
-    public void moveDown(int mx, int my) {
-        if (my > 0) {
-            Block before = map.get(mx + "," + (my - 1));
-            before.getLabel().setBackground(Color.GRAY);
-            before.setState(space);
+    public void moveDown() {
+        for (int i = 0; i < blockNum; i++) {
+            clear(mx[i], my[i]);
+            my[i]++;
+        }
 
-            Block b = map.get(mx + "," + my);
-            b.getLabel().setBackground(Color.GREEN);
-            b.setState(mBlock);
+        for (int i = 0; i < blockNum; i++) {
+            place(mx[i], my[i]);
+        }
+    }
+
+    //回転後の座標にブロックを配置することができるか
+    public boolean isChangePoint() {
+        boolean flag = true;
+
+        //ブロックの塊の中で，左側と上側のブロックを保持する変数
+        int minX = mx[0];
+        int minY = my[0];
+
+        //左側と上側を探す
+        for (int i = 0; i < blockNum; i++) {
+            if (minX > mx[i]) {
+                minX = mx[i];
+            }
+            if (minY > my[i]) {
+                minY = my[i];
+            }
+        }
+
+        int x, y;
+        int tmpX, tmpY;
+        for (int i = 0; i < blockNum; i++) {
+            //ブロックの塊を左上に移動(どこにいても同様に回転行列を適用させるため，一時的に移動)
+            tmpX = mx[i] - minX;
+            tmpY = my[i] - minY;
+
+            //回転行列の式に則り，座標を変える
+            x = -tmpX + 1;
+            y = tmpY;
+
+            //元に位置に戻す
+            x += minX;
+            y += minY;
+
+            //元の位置が壁かブロックの場合はflagをfalseにする
+            Block b = map.get(x + "," + (y-1));
+            if (b.getState() == wall || b.getState() == block) {
+                flag = false;
+            }
+        }
+        return flag;
+    }
+
+    //座標を変える
+    public void changePoint() {
+        //ブロックの塊の中で，左側と上側のブロックを保持する変数
+        int minX = mx[0];
+        int minY = my[0];
+
+        //左側と上側を探す
+        for (int i = 0; i < blockNum; i++) {
+            if (minX > mx[i]) {
+                minX = mx[i];
+            }
+            if (minY > my[i]) {
+                minY = my[i];
+            }
+        }
+
+        for (int i = 0; i < blockNum; i++) {
+            //ブロックの塊を左上に移動(どこにいても同様に回転行列を適用させるため，一時的に移動)
+            mx[i] -= minX;
+            my[i] -= minY;
+
+            //座標を変換したブロックを一時的に入れる変数
+            int x, y;
+
+            //回転行列の式に則り，座標を変える
+            x = -my[i] + 1;
+            y = mx[i];
+            mx[i] = x;
+            my[i] = y;
+
+            //元に位置に戻す
+            mx[i] += minX;
+            my[i] += minY;
         }
     }
 
     //回転動作のメソッド
     /*制作中*/
     public void turnBlock() {
-        int[][] turnPlace = new int[5][5];
+        //ブロックを消す
+        for (int i = 0; i < blockNum; i++) {
+            clear(mx[i], my[i]);
+        }
 
-        for (int i = -2; i <= 2; i++) {
-            for (int j = -2; j <= 2; j++) {
-                turnPlace[0][0] = 0;
-            }
+        changePoint();
+
+        for (int i = 0; i < blockNum; i++) {
+            place(mx[i], my[i]);
         }
     }
 
@@ -236,6 +348,13 @@ public class Field extends JFrame {
                     }
                     initBlock();
                     flag = false;
+
+                    //揃っていたら消す
+                    for (int k = height; k >= 0; k--) {
+                        if (isCheckLine(k)) {
+                            deleteLine(k);
+                        }
+                    }
                 }
             }
         }
@@ -295,6 +414,10 @@ public class Field extends JFrame {
 
     //一段下げる
     public void downLine(int width, int height) {
+        if (isCheckLine(height - 1)) {
+            deleteLine(height - 1);
+        }
+
         Block on = map.get(width + "," + (height - 1));
         Block b = map.get(width + "," + height);
 
